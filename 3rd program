@@ -1,0 +1,137 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 5
+
+void toUpperCase(char* str) {
+    int i;
+    for (i = 0; str[i]; i++) {
+        str[i] = toupper(str[i]);
+    }
+}
+
+void removeSpaces(char* str) {
+    int i, j;
+    for (i = 0, j = 0; str[i]; i++) {
+        if (str[i] != ' ') {
+            str[j++] = str[i];
+        }
+    }
+    str[j] = '\0';
+}
+
+void generateKeyTable(char* key, char keyTable[SIZE][SIZE]) {
+    int dict[26] = {0};
+    int i, j, k, len = strlen(key);
+    int x = 0, y = 0;
+
+    // Process the key
+    for (i = 0; i < len; i++) {
+        if (key[i] == 'J') key[i] = 'I';
+        if (!dict[key[i] - 'A']) {
+            keyTable[x][y++] = key[i];
+            dict[key[i] - 'A'] = 1;
+            if (y == SIZE) {
+                y = 0;
+                x++;
+            }
+        }
+    }
+
+    // Process the remaining alphabet
+    for (i = 0; i < 26; i++) {
+        if (i + 'A' == 'J') continue; // skip 'J'
+        if (!dict[i]) {
+            keyTable[x][y++] = i + 'A';
+            if (y == SIZE) {
+                y = 0;
+                x++;
+            }
+        }
+    }
+}
+
+void prepareText(char* str, char* preparedText) {
+    int len = strlen(str);
+    int i, j = 0;
+
+    for (i = 0; i < len; i++) {
+        if (str[i] == 'J') str[i] = 'I';
+        if (j > 0 && str[i] == preparedText[j - 1]) {
+            preparedText[j++] = 'X';
+        }
+        preparedText[j++] = str[i];
+    }
+
+    if (j % 2 != 0) {
+        preparedText[j++] = 'X';
+    }
+    preparedText[j] = '\0';
+}
+
+void search(char keyTable[SIZE][SIZE], char a, char b, int* arr) {
+    int i, j;
+
+    if (a == 'J') a = 'I';
+    if (b == 'J') b = 'I';
+
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            if (keyTable[i][j] == a) {
+                arr[0] = i;
+                arr[1] = j;
+            }
+            if (keyTable[i][j] == b) {
+                arr[2] = i;
+                arr[3] = j;
+            }
+        }
+    }
+}
+
+void encrypt(char keyTable[SIZE][SIZE], char* preparedText, char* cipherText) {
+    int len = strlen(preparedText);
+    int i, a[4];
+
+    for (i = 0; i < len; i += 2) {
+        search(keyTable, preparedText[i], preparedText[i + 1], a);
+        if (a[0] == a[2]) {
+            cipherText[i] = keyTable[a[0]][(a[1] + 1) % SIZE];
+            cipherText[i + 1] = keyTable[a[2]][(a[3] + 1) % SIZE];
+        } else if (a[1] == a[3]) {
+            cipherText[i] = keyTable[(a[0] + 1) % SIZE][a[1]];
+            cipherText[i + 1] = keyTable[(a[2] + 1) % SIZE][a[3]];
+        } else {
+            cipherText[i] = keyTable[a[0]][a[3]];
+            cipherText[i + 1] = keyTable[a[2]][a[1]];
+        }
+    }
+    cipherText[len] = '\0';
+}
+
+int main() {
+    char key[100], plaintext[100], preparedText[200], cipherText[200];
+    char keyTable[SIZE][SIZE];
+
+    printf("Enter the key: ");
+    fgets(key, sizeof(key), stdin);
+    key[strcspn(key, "\n")] = '\0'; // Remove trailing newline
+
+    printf("Enter the plaintext: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+    plaintext[strcspn(plaintext, "\n")] = '\0'; // Remove trailing newline
+
+    toUpperCase(key);
+    toUpperCase(plaintext);
+    removeSpaces(key);
+    removeSpaces(plaintext);
+
+    generateKeyTable(key, keyTable);
+    prepareText(plaintext, preparedText);
+    encrypt(keyTable, preparedText, cipherText);
+
+    printf("Encrypted text: %s\n", cipherText);
+
+    return 0;
+}
