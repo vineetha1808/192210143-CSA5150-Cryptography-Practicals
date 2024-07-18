@@ -1,0 +1,29 @@
+#include <stdio.h>
+#include <ctype.h>
+
+int main() {
+    char plaintext[1000];
+    char ciphertext[26] = {'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'};
+    char ch;
+    int i;
+
+    printf("Enter a message to encrypt: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+
+    // Encrypting the message
+    for (i = 0; plaintext[i] != '\0'; ++i) {
+        ch = plaintext[i];
+
+        if (isalpha(ch)) {
+            if (islower(ch)) {
+                plaintext[i] = tolower(ciphertext[ch - 'a']);
+            } else if (isupper(ch)) {
+                plaintext[i] = toupper(ciphertext[ch - 'A']);
+            }
+        }
+    }
+
+    printf("Encrypted message: %s", plaintext);
+
+    return 0;
+}
