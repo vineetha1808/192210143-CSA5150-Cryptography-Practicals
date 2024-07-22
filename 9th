@@ -1,0 +1,105 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 5
+
+void prepareKeyTable(char key[], char keyTable[SIZE][SIZE]) {
+    int dict[26] = {0};
+    int i, j, k, len = strlen(key);
+    char ch;
+
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            keyTable[i][j] = '\0';
+        }
+    }
+
+    i = 0; j = 0;
+    for (k = 0; k < len; k++) {
+        if (key[k] != 'j') {
+            ch = tolower(key[k]);
+        } else {
+            ch = 'i';
+        }
+
+        if (dict[ch - 'a'] == 0) {
+            keyTable[i][j] = ch;
+            dict[ch - 'a'] = 1;
+            j++;
+            if (j == SIZE) {
+                j = 0;
+                i++;
+            }
+        }
+    }
+
+    for (ch = 'a'; ch <= 'z'; ch++) {
+        if (ch == 'j') continue;
+
+        if (dict[ch - 'a'] == 0) {
+            keyTable[i][j] = ch;
+            dict[ch - 'a'] = 1;
+            j++;
+            if (j == SIZE) {
+                j = 0;
+                i++;
+            }
+        }
+    }
+}
+
+void search(char keyTable[SIZE][SIZE], char a, char b, int pos[]) {
+    int i, j;
+
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            if (keyTable[i][j] == a) {
+                pos[0] = i;
+                pos[1] = j;
+            }
+            if (keyTable[i][j] == b) {
+                pos[2] = i;
+                pos[3] = j;
+            }
+        }
+    }
+}
+
+void decrypt(char keyTable[SIZE][SIZE], char str[], int len) {
+    int i, a_pos[4];
+
+    for (i = 0; i < len; i += 2) {
+        search(keyTable, str[i], str[i + 1], a_pos);
+
+        if (a_pos[0] == a_pos[2]) {
+            str[i] = keyTable[a_pos[0]][(a_pos[1] - 1 + SIZE) % SIZE];
+            str[i + 1] = keyTable[a_pos[2]][(a_pos[3] - 1 + SIZE) % SIZE];
+        } else if (a_pos[1] == a_pos[3]) {
+            str[i] = keyTable[(a_pos[0] - 1 + SIZE) % SIZE][a_pos[1]];
+            str[i + 1] = keyTable[(a_pos[2] - 1 + SIZE) % SIZE][a_pos[3]];
+        } else {
+            str[i] = keyTable[a_pos[0]][a_pos[3]];
+            str[i + 1] = keyTable[a_pos[2]][a_pos[1]];
+        }
+    }
+}
+
+int main() {
+    char key[] = "playfair example";
+    char keyTable[SIZE][SIZE];
+    char str[] = "KXJEYUREBEZWEHEWRYTUHEYFSKREHEGOYFIWITTUOLKSYCAJPOBOTEIZONTXBYBNTGONEYCUZWRGDSONSXBOUYWRHEBAAHYUSEDQ";
+    int i, len = strlen(str);
+
+    prepareKeyTable(key, keyTable);
+
+    for (i = 0; i < len; i++) {
+        str[i] = tolower(str[i]);
+    }
+
+    decrypt(keyTable, str, len);
+
+    printf("Decrypted message: %s\n", str);
+
+    return 0;
+}
