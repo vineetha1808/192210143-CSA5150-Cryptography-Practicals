@@ -1,0 +1,102 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 5
+
+void prepareKeyTable(char keyTable[SIZE][SIZE]) {
+    // This function assumes the key table is provided directly.
+}
+
+void search(char keyTable[SIZE][SIZE], char a, char b, int pos[]) {
+    int i, j;
+
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            if (keyTable[i][j] == a) {
+                pos[0] = i;
+                pos[1] = j;
+            }
+            if (keyTable[i][j] == b) {
+                pos[2] = i;
+                pos[3] = j;
+            }
+        }
+    }
+}
+
+void encrypt(char keyTable[SIZE][SIZE], char str[], int len) {
+    int i, a_pos[4];
+
+    for (i = 0; i < len; i += 2) {
+        search(keyTable, str[i], str[i + 1], a_pos);
+
+        if (a_pos[0] == a_pos[2]) {
+            str[i] = keyTable[a_pos[0]][(a_pos[1] + 1) % SIZE];
+            str[i + 1] = keyTable[a_pos[2]][(a_pos[3] + 1) % SIZE];
+        } else if (a_pos[1] == a_pos[3]) {
+            str[i] = keyTable[(a_pos[0] + 1) % SIZE][a_pos[1]];
+            str[i + 1] = keyTable[(a_pos[2] + 1) % SIZE][a_pos[3]];
+        } else {
+            str[i] = keyTable[a_pos[0]][a_pos[3]];
+            str[i + 1] = keyTable[a_pos[2]][a_pos[1]];
+        }
+    }
+}
+
+void formatMessage(char str[], int len) {
+    int i, j;
+    for (i = 0; i < len; i++) {
+        if (!isalpha(str[i])) {
+            for (j = i; j < len; j++) {
+                str[j] = str[j + 1];
+            }
+            len--;
+            i--;
+        }
+    }
+    for (i = 0; i < len; i++) {
+        str[i] = tolower(str[i]);
+        if (str[i] == 'j') {
+            str[i] = 'i';
+        }
+    }
+}
+
+void prepareMessagePairs(char str[], int len) {
+    int i;
+    for (i = 0; i < len; i += 2) {
+        if (str[i] == str[i + 1]) {
+            memmove(&str[i + 1], &str[i], len - i);
+            str[i + 1] = 'x';
+            len++;
+        }
+    }
+    if (len % 2 != 0) {
+        str[len] = 'x';
+        str[len + 1] = '\0';
+    }
+}
+
+int main() {
+    char keyTable[SIZE][SIZE] = {
+        {'m', 'f', 'h', 'i', 'j'},
+        {'k', 'u', 'n', 'o', 'p'},
+        {'q', 'z', 'v', 'w', 'x'},
+        {'y', 'e', 'l', 'a', 'r'},
+        {'g', 'd', 's', 't', 'b'}
+    };
+    char message[] = "Must see you over Cadogan West. Coming at once without error";
+    int len = strlen(message);
+
+    formatMessage(message, len);
+    len = strlen(message);
+    prepareMessagePairs(message, len);
+    len = strlen(message);
+
+    encrypt(keyTable, message, len);
+
+    printf("Encrypted message: %s\n", message);
+
+    return 0;
+}
